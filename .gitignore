@@ -7,3 +7,5 @@
 # Generated content
 /internal/generated/
 /dist/
+
+*.swp

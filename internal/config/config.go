@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"sync"
+  "strings"
 )
 
 // AppMetadata stores application-wide metadata such as version, license etc.
@@ -155,8 +156,16 @@ func (c *Config) Load() {
 }
 
 // MpdAddress returns the MPD address string constructed from host and port
-func (c *Config) MpdAddress() string {
-	return fmt.Sprintf("%s:%d", c.MpdHost, c.MpdPort)
+type Address struct {
+  Network string
+  Addr string
+}
+func (c *Config) MpdAddress() Address {
+  if strings.HasPrefix(c.MpdHost, "/") {
+    return Address{"unix", c.MpdHost}
+  } else {
+	  return Address{"tcp", fmt.Sprintf("%s:%s", c.MpdHost, c.MpdPort)}
+  }
 }
 
 // Save writes out the config to the default file

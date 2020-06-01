@@ -17,6 +17,7 @@ package player
 
 import (
 	"fmt"
+	"github.com/yktoo/ymuse/internal/config"
 	"github.com/fhs/gompd/v2/mpd"
 	"github.com/pkg/errors"
 	"sync"
@@ -25,7 +26,7 @@ import (
 
 // Connector encapsulates functionality for connecting to MPD and watch for its changes
 type Connector struct {
-	mpdAddress    string // MPD address
+	mpdAddress    config.Address // MPD address
 	mpdPassword   string // MPD password
 	stayConnected bool   // Whether a connection is supposed to be kept alive
 
@@ -62,7 +63,7 @@ func NewConnector(onStatusChange func(), onHeartbeat func(), onSubsystemChange f
 
 // Start initialises the connector
 // stayConnected: whether the connection must be automatically re-established when lost
-func (c *Connector) Start(mpdAddress, mpdPassword string, stayConnected bool) {
+func (c *Connector) Start(mpdAddress config.Address, mpdPassword string, stayConnected bool) {
 	c.mpdAddress = mpdAddress
 	c.mpdPassword = mpdPassword
 	c.stayConnected = stayConnected
@@ -191,7 +192,7 @@ func (c *Connector) connect() {
 
 					// Try to connect to MPD
 					var client *mpd.Client
-					if client, err = mpd.DialAuthenticated("tcp", c.mpdAddress, c.mpdPassword); err != nil {
+					if client, err = mpd.DialAuthenticated(c.mpdAddress.Network, c.mpdAddress.Addr, c.mpdPassword); err != nil {
 						err = errors.Errorf("Dial() failed: %v", err)
 						return
 					}
@@ -297,7 +298,7 @@ func (c *Connector) watch() {
 
 			// If no watcher yet
 			if mpdWatcher == nil {
-				watcher, err := mpd.NewWatcher("tcp", c.mpdAddress, c.mpdPassword)
+				watcher, err := mpd.NewWatcher(c.mpdAddress.Network, c.mpdAddress.Addr, c.mpdPassword)
 				// Failed to connect
 				if err != nil {
 					log.Warning("Failed to watch MPD", err)
